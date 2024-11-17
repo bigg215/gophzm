@@ -60,7 +60,7 @@ func handlerCombine(s *state, cmd command) error {
 		return fmt.Errorf("error writing output file: %w", err)
 	}
 	fmt.Printf("Combine completed:\n")
-	fmt.Printf("Output:\t%s\n", outputFileName)
+	fmt.Printf("Output:\t%s\n", outputFilePath)
 	fmt.Printf("Bytes:\t%d\n", bytesWritten)
 	return nil
 }
