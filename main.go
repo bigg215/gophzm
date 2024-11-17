@@ -1,22 +1,36 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/bigg215/gophzm/internal/database"
+	_ "github.com/lib/pq"
+
+	"github.com/joho/godotenv"
 )
 
 type state struct {
-	userName string
+	db *database.Queries
 }
 
 const inputDirectory = "phzm-zips"
-const outputDirectory = "phzm-combined"
-const outputFileName = "phzmData.csv"
 
 func main() {
+	godotenv.Load()
+
+	dbURL := os.Getenv("DB_URL")
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbQueries := database.New(db)
+
 	programState := state{
-		userName: "system",
+		db: dbQueries,
 	}
 
 	cmds := commands{
@@ -25,7 +39,7 @@ func main() {
 
 	//register commands
 	cmds.register("status", handlerStatus)
-	cmds.register("combine", handlerCombine)
+	cmds.register("load", handlerLoad)
 
 	//parse cli args
 	if len(os.Args) < 2 {
@@ -36,7 +50,7 @@ func main() {
 	cmdArgs := os.Args[2:]
 
 	//run the command
-	err := cmds.run(&programState, command{
+	err = cmds.run(&programState, command{
 		Name: cmdName,
 		Args: cmdArgs,
 	})
