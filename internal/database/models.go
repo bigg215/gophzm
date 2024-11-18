@@ -14,8 +14,9 @@ type Zone struct {
 	ID        uuid.UUID `json:"id"`
 	Createdat time.Time `json:"createdat"`
 	Updatedat time.Time `json:"updatedat"`
-	Zipcode   string    `json:"zipcode"`
+	Zipcode   int32     `json:"zipcode"`
 	Zone      string    `json:"zone"`
 	Temprange string    `json:"temprange"`
 	Zonetitle string    `json:"zonetitle"`
+	Year      int32     `json:"year"`
 }

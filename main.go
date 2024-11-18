@@ -17,6 +17,7 @@ type state struct {
 }
 
 const inputDirectory = "phzm-zips"
+const defaultDataYear = 2023
 
 func main() {
 	godotenv.Load()
@@ -40,6 +41,8 @@ func main() {
 	//register commands
 	cmds.register("status", handlerStatus)
 	cmds.register("load", handlerLoad)
+	cmds.register("reset", handlerReset)
+	cmds.register("lookup", handlerLookupZip)
 
 	//parse cli args
 	if len(os.Args) < 2 {

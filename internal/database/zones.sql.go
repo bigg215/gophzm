@@ -20,28 +20,31 @@ INSERT INTO zones (
 	zipcode,
 	zone,
 	temprange,
-	zonetitle
- )
- VALUES (
+	zonetitle,
+	year
+)
+VALUES (
 	$1,
 	$2,
 	$3,
 	$4,
 	$5,
 	$6,
-	$7
- )
- RETURNING id, createdat, updatedat, zipcode, zone, temprange, zonetitle
+	$7,
+	$8
+)
+RETURNING id, createdat, updatedat, zipcode, zone, temprange, zonetitle, year
 `
 
 type AddZipParams struct {
 	ID        uuid.UUID `json:"id"`
 	Createdat time.Time `json:"createdat"`
 	Updatedat time.Time `json:"updatedat"`
-	Zipcode   string    `json:"zipcode"`
+	Zipcode   int32     `json:"zipcode"`
 	Zone      string    `json:"zone"`
 	Temprange string    `json:"temprange"`
 	Zonetitle string    `json:"zonetitle"`
+	Year      int32     `json:"year"`
 }
 
 func (q *Queries) AddZip(ctx context.Context, arg AddZipParams) (Zone, error) {
@@ -53,6 +56,7 @@ func (q *Queries) AddZip(ctx context.Context, arg AddZipParams) (Zone, error) {
 		arg.Zone,
 		arg.Temprange,
 		arg.Zonetitle,
+		arg.Year,
 	)
 	var i Zone
 	err := row.Scan(
@@ -63,6 +67,76 @@ func (q *Queries) AddZip(ctx context.Context, arg AddZipParams) (Zone, error) {
 		&i.Zone,
 		&i.Temprange,
 		&i.Zonetitle,
+		&i.Year,
 	)
 	return i, err
+}
+
+const deleteAllZips = `-- name: DeleteAllZips :exec
+DELETE FROM zones
+`
+
+func (q *Queries) DeleteAllZips(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteAllZips)
+	return err
+}
+
+const getZipZone = `-- name: GetZipZone :one
+SELECT id, createdat, updatedat, zipcode, zone, temprange, zonetitle, year
+FROM zones
+WHERE zipcode = $1
+`
+
+func (q *Queries) GetZipZone(ctx context.Context, zipcode int32) (Zone, error) {
+	row := q.db.QueryRowContext(ctx, getZipZone, zipcode)
+	var i Zone
+	err := row.Scan(
+		&i.ID,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Zipcode,
+		&i.Zone,
+		&i.Temprange,
+		&i.Zonetitle,
+		&i.Year,
+	)
+	return i, err
+}
+
+const getZipsForZone = `-- name: GetZipsForZone :many
+SELECT id, createdat, updatedat, zipcode, zone, temprange, zonetitle, year
+FROM zones
+WHERE zone = $1
+`
+
+func (q *Queries) GetZipsForZone(ctx context.Context, zone string) ([]Zone, error) {
+	rows, err := q.db.QueryContext(ctx, getZipsForZone, zone)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Zone
+	for rows.Next() {
+		var i Zone
+		if err := rows.Scan(
+			&i.ID,
+			&i.Createdat,
+			&i.Updatedat,
+			&i.Zipcode,
+			&i.Zone,
+			&i.Temprange,
+			&i.Zonetitle,
+			&i.Year,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
