@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"io"
+	"log"
+	"net/http"
 )
 
 func handlerReset(s *state, cmd command) error {
@@ -16,26 +18,41 @@ func handlerReset(s *state, cmd command) error {
 	return nil
 }
 
-func handlerLookupZip(s *state, cmd command) error {
-	if len(cmd.Args) != 1 {
-		return fmt.Errorf("usage: %s <zip>", cmd.Name)
-	}
-	zipInteger, err := strconv.Atoi(cmd.Args[0])
+func handlerServe(s *state, cmd command) error {
+	mux := http.NewServeMux()
 
-	if err != nil {
-		return fmt.Errorf("invalid zip: %w", err)
-	}
+	mux.HandleFunc("GET /api/status", s.apiHandlerReady)
+	mux.HandleFunc("GET /api/zip/{zipcode}", s.apiHanderLookupZip)
 
-	zoneRecord, err := s.db.GetZipZone(context.Background(), int32(zipInteger))
-
-	if err != nil {
-		return fmt.Errorf("error retrieving record: %w", err)
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
 	}
 
-	fmt.Printf("Zipcode:\t%d\n", zoneRecord.Zipcode)
-	fmt.Printf("Zone:\t\t%s\n", zoneRecord.Zone)
-	fmt.Printf("Temp Range:\t%s\n", zoneRecord.Temprange)
-	fmt.Printf("Dataset:\t%d\n", zoneRecord.Year)
-
+	log.Printf("Starting Server ...")
+	log.Fatal(srv.ListenAndServe())
 	return nil
+}
+
+func (s *state) apiHandlerReady(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "OK\n")
+}
+
+func (s *state) apiHanderLookupZip(w http.ResponseWriter, req *http.Request) {
+	zipcode := req.PathValue("zipcode")
+
+	if len(zipcode) == 0 {
+		respondwithError(w, http.StatusInternalServerError, "invalid zipcode", nil)
+		return
+	}
+
+	zoneData, err := s.db.GetZipZone(req.Context(), zipcode)
+
+	if err != nil {
+		respondwithError(w, http.StatusNotFound, "zipcode not found", err)
+		return
+	}
+	respondWithJson(w, http.StatusOK, zoneData)
 }

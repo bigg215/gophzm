@@ -7,11 +7,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/bigg215/gophzm/internal/database"
-	"github.com/google/uuid"
 )
 
 func handlerLoad(s *state, cmd command) error {
@@ -58,14 +56,10 @@ func handlerLoad(s *state, cmd command) error {
 			if err != nil {
 				return fmt.Errorf("error reading csv file: %w", err)
 			}
-
-			zipInteger, _ := strconv.Atoi(record[0])
-
 			_, err = s.db.AddZip(context.Background(), database.AddZipParams{
-				ID:        uuid.New(),
 				Createdat: time.Now().UTC(),
 				Updatedat: time.Now().UTC(),
-				Zipcode:   int32(zipInteger),
+				Zipcode:   record[0],
 				Zone:      record[1],
 				Temprange: record[2],
 				Zonetitle: record[3],

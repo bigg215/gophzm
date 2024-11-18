@@ -6,15 +6,13 @@ package database
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Zone struct {
-	ID        uuid.UUID `json:"id"`
+	ID        int32     `json:"id"`
 	Createdat time.Time `json:"createdat"`
 	Updatedat time.Time `json:"updatedat"`
-	Zipcode   int32     `json:"zipcode"`
+	Zipcode   string    `json:"zipcode"`
 	Zone      string    `json:"zone"`
 	Temprange string    `json:"temprange"`
 	Zonetitle string    `json:"zonetitle"`

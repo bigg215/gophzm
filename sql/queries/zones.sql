@@ -1,6 +1,5 @@
 -- name: AddZip :one
 INSERT INTO zones (
-	id,
 	createdat,
 	updatedat,
 	zipcode,
@@ -16,8 +15,7 @@ VALUES (
 	$4,
 	$5,
 	$6,
-	$7,
-	$8
+	$7
 )
 RETURNING *;
 

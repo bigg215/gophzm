@@ -42,7 +42,8 @@ func main() {
 	cmds.register("status", handlerStatus)
 	cmds.register("load", handlerLoad)
 	cmds.register("reset", handlerReset)
-	cmds.register("lookup", handlerLookupZip)
+	cmds.register("zip", handlerLookupZip)
+	cmds.register("serve", handlerServe)
 
 	//parse cli args
 	if len(os.Args) < 2 {

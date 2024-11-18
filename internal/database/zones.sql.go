@@ -8,13 +8,10 @@ package database
 import (
 	"context"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const addZip = `-- name: AddZip :one
 INSERT INTO zones (
-	id,
 	createdat,
 	updatedat,
 	zipcode,
@@ -30,17 +27,15 @@ VALUES (
 	$4,
 	$5,
 	$6,
-	$7,
-	$8
+	$7
 )
 RETURNING id, createdat, updatedat, zipcode, zone, temprange, zonetitle, year
 `
 
 type AddZipParams struct {
-	ID        uuid.UUID `json:"id"`
 	Createdat time.Time `json:"createdat"`
 	Updatedat time.Time `json:"updatedat"`
-	Zipcode   int32     `json:"zipcode"`
+	Zipcode   string    `json:"zipcode"`
 	Zone      string    `json:"zone"`
 	Temprange string    `json:"temprange"`
 	Zonetitle string    `json:"zonetitle"`
@@ -49,7 +44,6 @@ type AddZipParams struct {
 
 func (q *Queries) AddZip(ctx context.Context, arg AddZipParams) (Zone, error) {
 	row := q.db.QueryRowContext(ctx, addZip,
-		arg.ID,
 		arg.Createdat,
 		arg.Updatedat,
 		arg.Zipcode,
@@ -87,7 +81,7 @@ FROM zones
 WHERE zipcode = $1
 `
 
-func (q *Queries) GetZipZone(ctx context.Context, zipcode int32) (Zone, error) {
+func (q *Queries) GetZipZone(ctx context.Context, zipcode string) (Zone, error) {
 	row := q.db.QueryRowContext(ctx, getZipZone, zipcode)
 	var i Zone
 	err := row.Scan(
